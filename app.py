@@ -5,7 +5,7 @@ import pandas as pd
 @st.cache_data
 def load_data():
     # パスは君のドライブの状況に合わせて調整してくれ
-    df = pd.read_excel('/content/drive/MyDrive/Kumamoto_Library_Master_2026.xlsx')
+    df = pd.read_excel('Kumamoto_Library_Master_2026.xlsx')
     return df
 
 st.title("🚀 熊本県立高校 全県横断検索プロトタイプ")
