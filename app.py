@@ -10,24 +10,22 @@ st.title("📚 Welcome to MTL: Mattari Tosho-can Library")
 st.subheader("南稜高校図書館 蔵書検索 & 虹色診断")
 st.write("「君の作戦、バックアップします。やりたいことがある君へ。」")
 
-# 2. データの読み込み（CSV対応版バイ！）
+# 2. データの読み込み
 @st.cache_data
 def load_data():
-    # ファイル名をCSVに変更
+    # GitHub上の名前に合わせて「K」を大文字にするバイ！
     file_name = 'Kumamoto_Library_Master_2026.csv' 
+    
     if not os.path.exists(file_name):
-        st.error(f"エラー：{file_name} が見つからないバイ。GitHubにアップしてね！")
+        st.error(f"エラー：{file_name} が見つからないバイ。")
         return None
     
-    # 日本語の文字化けを防ぐために、2パターンの読み込みを試すバイ
+    # 日本語の文字化け対策（ExcelのCSVならcp932でいけるはず）
     try:
-        # まずは一般的なShift-JIS（Excelで作ったCSVは大体これ）
         return pd.read_csv(file_name, encoding='cp932')
     except:
-        # ダメならUTF-8（MacやGoogleで作ったCSV）
         return pd.read_csv(file_name, encoding='utf-8')
 
-# ここでデータを読み込む（この1行は絶対必要バイ！）
 df = load_data()
 
 if df is not None:
