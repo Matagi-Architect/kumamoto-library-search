@@ -10,16 +10,24 @@ st.title("📚 Welcome to MTL: Mattari Tosho-can Library")
 st.subheader("南稜高校図書館 蔵書検索 & 虹色診断")
 st.write("「君の作戦、バックアップします。やりたいことがある君へ。」")
 
-# 2. データの読み込み
+# 2. データの読み込み（CSV対応版バイ！）
 @st.cache_data
 def load_data():
-    # Excelファイル名が正しいか確認してね
-    file_name = 'Kumamoto_Library_Master_2026.xlsx' 
+    # ファイル名をCSVに変更
+    file_name = 'Kumamoto_Library_Master_2026.csv' 
     if not os.path.exists(file_name):
-        st.error(f"エラー：{file_name} が見つからないバイ。")
+        st.error(f"エラー：{file_name} が見つからないバイ。GitHubにアップしてね！")
         return None
-    return pd.read_excel(file_name, engine='openpyxl')
+    
+    # 日本語の文字化けを防ぐために、2パターンの読み込みを試すバイ
+    try:
+        # まずは一般的なShift-JIS（Excelで作ったCSVは大体これ）
+        return pd.read_csv(file_name, encoding='cp932')
+    except:
+        # ダメならUTF-8（MacやGoogleで作ったCSV）
+        return pd.read_csv(file_name, encoding='utf-8')
 
+# ここでデータを読み込む（この1行は絶対必要バイ！）
 df = load_data()
 
 if df is not None:
