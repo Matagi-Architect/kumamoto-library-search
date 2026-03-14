@@ -80,12 +80,23 @@ if df is not None:
                     isbn13 = row.get('ISBN13')
                     cover_url = get_hanmoto_url(isbn13)
                     
-                    if cover_url:
-                        # 読み込みエラーを無視して表示を試みるバイ
-                        c1.image(cover_url, use_container_width=True)
-                    else:
-                        c1.info("No Cover")
-                    
-                    c2.write(f"**分類:** {row['自校分類']} / {row['ジャンル']}")
-                    c2.write(f"**出版年:** {row.get('出版年', '不明')}")
-                    c2.write(f"**ISBN13:** {row.get('ISBN13', 'なし')}")
+                    # --- いま西川さんが書いてるコードの最後 ---
+                if cover_url:
+                    c1.image(cover_url, use_container_width=True)
+                else:
+                    c1.info("No Cover")
+                
+                c2.write(f"**分類:** {row['自校分類']} / {row['ジャンル']}")
+                c2.write(f"**出版年:** {row.get('出版年', '不明')}") # 出版年に変えたバイ！
+                c2.write(f"**ISBN13:** {row.get('ISBN13', 'なし')}")
+
+            # 🚨【ここバイ！】forのループを抜け出した直後の場所 🚨
+            # (左からスペース8個分の位置)
+            st.divider()
+            csv_data = df[mask].to_csv(index=False, encoding='cp932')
+            st.download_button(
+                label=f"🎬 '{search_query}' の結果({len(df[mask])}件)を保存",
+                data=csv_data,
+                file_name=f"MTL_{search_query}.csv",
+                mime="text/csv",
+            )
