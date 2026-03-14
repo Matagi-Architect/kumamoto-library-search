@@ -64,14 +64,14 @@ if df is not None:
         if search_query:
             # 無敵モードの検索
             mask = df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)
-            result = df[mask].head(20) # 20件に絞ると表示が早くなるバイ！
+            result = df[mask].head(100) # 100件に絞ると表示が早くなるバイ！
             
-            st.write(f"検索結果: {len(df[mask])} 件（上位20件を表示）")
+            st.write(f"検索結果: {len(df[mask])} 件（上位100件を表示）")
             
             for i, row in result.iterrows():
                 # 本の名前と著者名を並べて表示
                 title = row.get('書名', '無題')
-                author = row.get('著者名', '不明')
+                author = row.get('著者', '不明')
                 
                 with st.expander(f"📖 {title} （{author}）"):
                     c1, c2 = st.columns([1, 2])
