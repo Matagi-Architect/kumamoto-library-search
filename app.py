@@ -87,5 +87,5 @@ if df is not None:
                         c1.info("No Cover")
                     
                     c2.write(f"**分類:** {row['自校分類']} / {row['ジャンル']}")
-                    c2.write(f"**所在:** {row.get('配架場所', '不明')}")
+                    c2.write(f"**所在:** {row.get('出版年', '不明')}")
                     c2.write(f"**ISBN13:** {row.get('ISBN13', 'なし')}")
