@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
-import requests
-import re # ハイフンを消すための正規表現バイ！
+import re
 
 st.set_page_config(page_title="MTL 南稜高校図書館", layout="wide")
 
@@ -17,40 +16,26 @@ def load_data():
         st.error(f"エラー：{file_name} が見つからないバイ。")
         return None
     try:
+        # ExcelからのCSVはcp932(Shift-JIS)が多いバイ
         return pd.read_csv(file_name, encoding='cp932')
     except:
         return pd.read_csv(file_name, encoding='utf-8')
 
-# 書影を取得する魔法（ハイフン除去対応版）
-def get_book_cover(isbn_raw):
+# --- 版元ドットコムの画像URLを生成する魔法 ---
+def get_hanmoto_url(isbn_raw):
     if pd.isna(isbn_raw) or isbn_raw == "":
         return None
-    
-    # ハイフンを取り除いて数字だけにする魔法
+    # ハイフンを抜いて数字13桁だけにする
     isbn_clean = re.sub(r'[-ー]', '', str(isbn_raw))
-    
-    # Open Library API（Googleより表紙が出やすい場合があるバイ）
-    url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{isbn_clean}&format=json&jscmd=data"
-    try:
-        res = requests.get(url).json()
-        key = f"ISBN:{isbn_clean}"
-        if key in res and 'cover' in res[key]:
-            return res[key]['cover']['medium']
-    except:
-        pass
-    
-    # Open Libraryで見つからなければGoogle Books APIへ
-    url_g = f"https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn_clean}"
-    try:
-        res_g = requests.get(url_g).json()
-        return res_g['items'][0]['volumeInfo']['imageLinks']['thumbnail']
-    except:
-        return None
+    if len(isbn_clean) == 13:
+        # 版元ドットコムの画像サーバーのルールに従うバイ
+        return f"https://www.hanmoto.com/bd/img/{isbn_clean}.jpg"
+    return None
 
 df = load_data()
 
 if df is not None:
-    # データ整理（ジャンル分け）
+    # データ整理
     df['NDC_main'] = df['自校分類'].astype(str).str[0]
     ndc_labels = {'0':'0 総記','1':'1 哲学','2':'2 歴史','3':'3 社会科学','4':'4 自然科学',
                   '5':'5 技術','6':'6 産業','7':'7 芸術','8':'8 言語','9':'9 文学','E':'E 絵本'}
@@ -64,7 +49,6 @@ if df is not None:
                      color_discrete_sequence=px.colors.qualitative.Pastel)
         fig.update_traces(textinfo='percent+label', hovertemplate='%{label}<br>%{value}冊')
         
-        # グラフクリックを検知
         selected_genre = st.plotly_chart(fig, use_container_width=True, on_select="rerun")
         
         clicked_label = None
@@ -78,23 +62,30 @@ if df is not None:
         search_query = st.text_input("キーワード入力 / グラフから選択", value=initial_query)
 
         if search_query:
+            # 無敵モードの検索
             mask = df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)
-            result = df[mask].head(30) # 30件まで表示
+            result = df[mask].head(20) # 20件に絞ると表示が早くなるバイ！
             
-            st.write(f"検索結果: {len(df[mask])} 件（上位30件を表示）")
+            st.write(f"検索結果: {len(df[mask])} 件（上位20件を表示）")
             
             for i, row in result.iterrows():
-                with st.expander(f"📖 {row['書名']} ({row.get('著者名', '不明')})"):
+                # 本の名前と著者名を並べて表示
+                title = row.get('書名', '無題')
+                author = row.get('著者名', '不明')
+                
+                with st.expander(f"📖 {title} （{author}）"):
                     c1, c2 = st.columns([1, 2])
-                    # ISBN13を優先、なければISBNを使う
-                    isbn_to_use = row.get('ISBN13') if pd.notna(row.get('ISBN13')) else row.get('ISBN')
                     
-                    cover_url = get_book_cover(isbn_to_use)
+                    # 版元ドットコムのURLを生成
+                    isbn13 = row.get('ISBN13')
+                    cover_url = get_hanmoto_url(isbn13)
+                    
                     if cover_url:
-                        c1.image(cover_url)
+                        # 読み込みエラーを無視して表示を試みるバイ
+                        c1.image(cover_url, use_container_width=True)
                     else:
-                        c1.image("https://via.placeholder.com/128x192.png?text=No+Image")
+                        c1.info("No Cover")
                     
                     c2.write(f"**分類:** {row['自校分類']} / {row['ジャンル']}")
+                    c2.write(f"**所在:** {row.get('配架場所', '不明')}")
                     c2.write(f"**ISBN13:** {row.get('ISBN13', 'なし')}")
-                    c2.write(f"**配架場所:** {row.get('配架場所', '不明')}")
