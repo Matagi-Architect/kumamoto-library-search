@@ -11,7 +11,7 @@ st.write("「君の作戦、バックアップします。やりたいことが�
 
 @st.cache_data
 def load_data():
-    file_name = 'Kumamoto_Library_Master_2026.csv'
+    file_name = 'Kumamoto_Library_Master_20260715.csv'
     if not os.path.exists(file_name):
         st.error(f"エラー：{file_name} が見つからないバイ。")
         return None
